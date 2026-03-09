@@ -1,0 +1,13 @@
+import { buildApp } from "./app.js";
+
+const app = buildApp();
+
+try {
+  await app.listen({
+    port: app.config.PORT,
+    host: app.config.HOST
+  });
+} catch (error) {
+  app.log.error(error);
+  process.exit(1);
+}
