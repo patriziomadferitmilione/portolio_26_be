@@ -6,8 +6,11 @@
 - Set up a Fastify-based Node.js API.
 - Added environment configuration with `.env.example`.
 - Added a health endpoint.
-- Added a track catalog endpoint with seeded in-memory data.
-- Added a playback authorization endpoint that returns a signed-style media URL stub.
+- Added dual database support with SQLite for local development and PostgreSQL for production.
+- Added cookie-backed session auth for admin access.
+- Added database-backed track and release endpoints.
+- Added admin CRUD routes for tracks and releases.
+- Added media asset upload, storage, and local static serving for uploaded files.
 
 ## Current Backend Shape
 
@@ -49,24 +52,22 @@
 
 - `Authentication`
   - Login
-  - Token issuance
   - Session validation
   - Role checks
 - `Track Management`
   - Create track
   - Update metadata
-  - Upload audio
-  - Attach artwork
   - Set visibility
-  - Publish or unpublish
+  - Track CRUD implemented
 - `Release Management`
   - Create release
   - Edit release fields
   - Reorder tracks
-  - Publish or unpublish release
+  - Release CRUD implemented
 - `Media Management`
   - Upload assets
-  - Replace assets
+  - Persist media metadata
+  - Serve uploaded assets locally
   - Associate assets with tracks, releases, and pages
 - `Live Management`
   - Create show
@@ -107,11 +108,11 @@
 
 ## Immediate Next Steps
 
-- Choose database and schema strategy
-- Add auth routes and admin-only guards
-- Design the first content entities around tracks and releases
-- Add upload endpoints for audio and artwork
-- Prepare endpoints for frontend admin views
+- Add file validation, size limits, and media cleanup policies
+- Add show, writing, and site-content entities
+- Add richer publish-state rules and preview support
+- Move from local upload storage to production object storage integration
+- Add analytics and more granular role handling
 
 ## Notes
 
