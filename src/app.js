@@ -3,11 +3,16 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import jwt from "@fastify/jwt";
+import multipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
+import fs from "node:fs";
+import path from "node:path";
 
 import { bootstrapDatabase } from "./db/bootstrap.js";
 import { createDatabaseContext } from "./db/client.js";
 import { deleteSession, findCurrentSession } from "./services/auth.js";
 import authRoutes from "./routes/auth.js";
+import adminMediaRoutes from "./routes/admin-media.js";
 import adminReleaseRoutes from "./routes/admin-releases.js";
 import adminTrackRoutes from "./routes/admin-tracks.js";
 import healthRoutes from "./routes/health.js";
@@ -35,6 +40,15 @@ export async function buildApp() {
 
   app.register(cookie, {
     secret: app.config.COOKIE_SECRET
+  });
+
+  app.register(multipart);
+
+  fs.mkdirSync(path.resolve(app.config.UPLOAD_DIR), { recursive: true });
+
+  app.register(fastifyStatic, {
+    root: path.resolve(app.config.UPLOAD_DIR),
+    prefix: `${app.config.PUBLIC_UPLOAD_BASE}/`
   });
 
   app.register(jwt, {
@@ -74,6 +88,7 @@ export async function buildApp() {
 
   app.register(healthRoutes, { prefix: "/api" });
   app.register(authRoutes, { prefix: "/api" });
+  app.register(adminMediaRoutes, { prefix: "/api" });
   app.register(adminReleaseRoutes, { prefix: "/api" });
   app.register(adminTrackRoutes, { prefix: "/api" });
   app.register(releaseRoutes, { prefix: "/api" });
@@ -106,6 +121,8 @@ function buildConfig() {
     JWT_SECRET: process.env.JWT_SECRET ?? "change-me",
     COOKIE_SECRET: process.env.COOKIE_SECRET ?? "change-me",
     SESSION_COOKIE_NAME: process.env.SESSION_COOKIE_NAME ?? "portfolio_session",
+    UPLOAD_DIR: process.env.UPLOAD_DIR ?? "./uploads",
+    PUBLIC_UPLOAD_BASE: process.env.PUBLIC_UPLOAD_BASE ?? "/uploads",
     MEDIA_SIGNING_SECRET: process.env.MEDIA_SIGNING_SECRET ?? "change-me",
     MEDIA_BASE_URL: process.env.MEDIA_BASE_URL ?? "https://media.example.com",
     ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "",

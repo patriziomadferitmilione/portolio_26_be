@@ -50,3 +50,16 @@ export const releaseTracks = pgTable("release_tracks", {
   trackId: text("track_id").notNull().references(() => tracks.id),
   position: integer("position").notNull()
 });
+
+export const mediaAssets = pgTable("media_assets", {
+  id: text("id").primaryKey(),
+  filename: text("filename").notNull(),
+  originalName: text("original_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  category: text("category").notNull(),
+  url: text("url").notNull(),
+  storagePath: text("storage_path").notNull(),
+  size: integer("size").notNull(),
+  uploadedByUserId: text("uploaded_by_user_id").references(() => users.id),
+  createdAt: text("created_at").notNull()
+});

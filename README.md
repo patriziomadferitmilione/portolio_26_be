@@ -30,3 +30,9 @@ Backend API for the portfolio_26 music platform.
 - Web auth uses cookie-backed sessions stored in the database
 - Playback can continue to use short-lived signed URLs or JWT-backed delegation later
 - An initial admin user is seeded automatically when `ADMIN_EMAIL` and `ADMIN_PASSWORD` are set
+
+## Uploads
+
+- Admin media uploads are stored locally under `UPLOAD_DIR` in development
+- Uploaded assets are exposed publicly under `PUBLIC_UPLOAD_BASE`
+- The backend persists uploaded asset metadata in the `media_assets` table

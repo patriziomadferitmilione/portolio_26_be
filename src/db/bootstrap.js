@@ -121,6 +121,22 @@ async function createTables(dbContext) {
       FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE
     )`
   );
+  await runStatement(
+    dbContext,
+    `CREATE TABLE IF NOT EXISTS media_assets (
+      id TEXT PRIMARY KEY,
+      filename TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      category TEXT NOT NULL,
+      url TEXT NOT NULL,
+      storage_path TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      uploaded_by_user_id TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (uploaded_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+    )`
+  );
 }
 
 async function runStatement({ dialect, raw }, statement) {
