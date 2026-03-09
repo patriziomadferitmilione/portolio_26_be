@@ -8,8 +8,10 @@ import { bootstrapDatabase } from "./db/bootstrap.js";
 import { createDatabaseContext } from "./db/client.js";
 import { deleteSession, findCurrentSession } from "./services/auth.js";
 import authRoutes from "./routes/auth.js";
+import adminReleaseRoutes from "./routes/admin-releases.js";
 import adminTrackRoutes from "./routes/admin-tracks.js";
 import healthRoutes from "./routes/health.js";
+import releaseRoutes from "./routes/releases.js";
 import trackRoutes from "./routes/tracks.js";
 import playbackRoutes from "./routes/playback.js";
 
@@ -72,7 +74,9 @@ export async function buildApp() {
 
   app.register(healthRoutes, { prefix: "/api" });
   app.register(authRoutes, { prefix: "/api" });
+  app.register(adminReleaseRoutes, { prefix: "/api" });
   app.register(adminTrackRoutes, { prefix: "/api" });
+  app.register(releaseRoutes, { prefix: "/api" });
   app.register(trackRoutes, { prefix: "/api" });
   app.register(playbackRoutes, { prefix: "/api" });
 

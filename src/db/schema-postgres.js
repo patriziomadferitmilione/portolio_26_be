@@ -30,3 +30,23 @@ export const tracks = pgTable("tracks", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull()
 });
+
+export const releases = pgTable("releases", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  format: text("format").notNull(),
+  visibility: text("visibility").notNull(),
+  artworkUrl: text("artwork_url").notNull(),
+  notes: text("notes").notNull(),
+  publishedAt: text("published_at"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull()
+});
+
+export const releaseTracks = pgTable("release_tracks", {
+  id: text("id").primaryKey(),
+  releaseId: text("release_id").notNull().references(() => releases.id),
+  trackId: text("track_id").notNull().references(() => tracks.id),
+  position: integer("position").notNull()
+});

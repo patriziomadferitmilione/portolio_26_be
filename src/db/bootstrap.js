@@ -35,9 +35,24 @@ const seedTracks = [
   }
 ];
 
+const seedReleases = [
+  {
+    id: "release-vinegar-single",
+    title: "Vinegar",
+    slug: "vinegar",
+    format: "single",
+    visibility: "public",
+    artworkUrl: "/artwork/vinegar.jpg",
+    notes: "Seed release for the initial catalog foundation.",
+    publishedAt: "2020-10-09T00:00:00.000Z",
+    trackIds: ["vinegar"]
+  }
+];
+
 export async function bootstrapDatabase(dbContext, config) {
   await createTables(dbContext);
   await seedTracksIfEmpty(dbContext);
+  await seedReleasesIfEmpty(dbContext);
   await seedAdminIfConfigured(dbContext, config);
 }
 
@@ -80,6 +95,32 @@ async function createTables(dbContext) {
       updated_at TEXT NOT NULL
     )`
   );
+  await runStatement(
+    dbContext,
+    `CREATE TABLE IF NOT EXISTS releases (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      format TEXT NOT NULL,
+      visibility TEXT NOT NULL,
+      artwork_url TEXT NOT NULL,
+      notes TEXT NOT NULL,
+      published_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`
+  );
+  await runStatement(
+    dbContext,
+    `CREATE TABLE IF NOT EXISTS release_tracks (
+      id TEXT PRIMARY KEY,
+      release_id TEXT NOT NULL,
+      track_id TEXT NOT NULL,
+      position INTEGER NOT NULL,
+      FOREIGN KEY (release_id) REFERENCES releases(id) ON DELETE CASCADE,
+      FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE
+    )`
+  );
 }
 
 async function runStatement({ dialect, raw }, statement) {
@@ -106,6 +147,39 @@ async function seedTracksIfEmpty({ db, schema }) {
       updatedAt: now
     }))
   );
+}
+
+async function seedReleasesIfEmpty({ db, schema }) {
+  const result = await db.select({ value: count() }).from(schema.releases);
+  const total = Number(result[0]?.value ?? 0);
+  if (total > 0) {
+    return;
+  }
+
+  const now = new Date().toISOString();
+  for (const release of seedReleases) {
+    await db.insert(schema.releases).values({
+      id: release.id,
+      title: release.title,
+      slug: release.slug,
+      format: release.format,
+      visibility: release.visibility,
+      artworkUrl: release.artworkUrl,
+      notes: release.notes,
+      publishedAt: release.publishedAt,
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await db.insert(schema.releaseTracks).values(
+      release.trackIds.map((trackId, index) => ({
+        id: crypto.randomUUID(),
+        releaseId: release.id,
+        trackId,
+        position: index + 1
+      }))
+    );
+  }
 }
 
 async function seedAdminIfConfigured({ db, schema }, config) {
