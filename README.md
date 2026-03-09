@@ -6,12 +6,27 @@ Backend API for the portfolio_26 music platform.
 
 - Node.js
 - Fastify
-- JWT auth
+- Drizzle ORM
+- SQLite for local development
+- PostgreSQL for production
+- Cookie sessions for web auth
+- JWT for playback and media delegation
 - Object storage + signed media URLs
-- PostgreSQL for app data
 
 ## Initial goals
 
 - Health check and API bootstrap
 - Track metadata endpoints
 - Upload and playback authorization flow
+
+## Local and Production Database
+
+- Local development defaults to SQLite using `./data/local.db`
+- Production defaults to PostgreSQL using `DATABASE_URL`
+- Override behavior explicitly with `DB_CLIENT=sqlite` or `DB_CLIENT=postgres`
+
+## Auth Foundation
+
+- Web auth uses cookie-backed sessions stored in the database
+- Playback can continue to use short-lived signed URLs or JWT-backed delegation later
+- An initial admin user is seeded automatically when `ADMIN_EMAIL` and `ADMIN_PASSWORD` are set

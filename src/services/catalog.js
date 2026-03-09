@@ -1,28 +1,21 @@
-export const tracks = [
-  {
-    id: "midnight-drive",
-    title: "Midnight Drive",
-    artist: "Patrizio Milione",
-    mood: "Synthwave",
-    duration: 231,
-    visibility: "public",
-    storageKey: "tracks/midnight-drive/master.mp3"
-  },
-  {
-    id: "rome-after-rain",
-    title: "Rome After Rain",
-    artist: "Patrizio Milione",
-    mood: "Ambient",
-    duration: 274,
-    visibility: "private",
-    storageKey: "tracks/rome-after-rain/master.mp3"
-  }
-];
+import { eq } from "drizzle-orm";
 
-export function listTracks() {
-  return tracks.map(({ storageKey, ...track }) => track);
+export async function listTracks(dbContext, { includePrivate = false } = {}) {
+  const { db, schema } = dbContext;
+  const rows = includePrivate
+    ? await db.select().from(schema.tracks)
+    : await db.select().from(schema.tracks).where(eq(schema.tracks.visibility, "public"));
+
+  return rows.map(({ storageKey, ...track }) => track);
 }
 
-export function findTrackById(trackId) {
-  return tracks.find((track) => track.id === trackId) ?? null;
+export async function findTrackById(dbContext, trackId) {
+  const { db, schema } = dbContext;
+  const rows = await db
+    .select()
+    .from(schema.tracks)
+    .where(eq(schema.tracks.id, trackId))
+    .limit(1);
+
+  return rows[0] ?? null;
 }

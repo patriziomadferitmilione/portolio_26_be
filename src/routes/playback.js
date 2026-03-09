@@ -4,8 +4,7 @@ import { z } from "zod";
 import { findTrackById } from "../services/catalog.js";
 
 const playbackSchema = z.object({
-  trackId: z.string().min(1),
-  userId: z.string().min(1).optional()
+  trackId: z.string().min(1)
 });
 
 function createSignedPlaybackUrl({ baseUrl, storageKey, signingSecret, ttlSeconds = 300 }) {
@@ -34,13 +33,13 @@ export default async function playbackRoutes(app) {
     }
 
     const { trackId } = parseResult.data;
-    const track = findTrackById(trackId);
+    const track = await findTrackById(app.dbContext, trackId);
 
     if (!track) {
       return reply.code(404).send({ error: "Track not found" });
     }
 
-    if (track.visibility === "private") {
+    if (track.visibility === "private" && !request.currentUser) {
       return reply.code(403).send({
         error: "Track requires authenticated access",
         code: "PRIVATE_TRACK"
