@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import argon2 from "argon2";
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 const seedTracks = [
   {
@@ -42,10 +42,32 @@ const seedReleases = [
     slug: "vinegar",
     format: "single",
     visibility: "public",
-    artworkUrl: "/artwork/vinegar.jpg",
+    artworkUrl: "/uploads/artwork/vinegar.jpg",
     notes: "Seed release for the initial catalog foundation.",
     publishedAt: "2020-10-09T00:00:00.000Z",
     trackIds: ["vinegar"]
+  },
+  {
+    id: "release-soda-and-lime-single",
+    title: "Soda & Lime",
+    slug: "soda-and-lime",
+    format: "single",
+    visibility: "public",
+    artworkUrl: "/uploads/artwork/soda-and-lime.jpg",
+    notes: "Seed release for Soda & Lime.",
+    publishedAt: "2020-11-13T00:00:00.000Z",
+    trackIds: ["soda-and-lime"]
+  },
+  {
+    id: "release-but-then-comes-the-night-single",
+    title: "But Then Comes the Night",
+    slug: "but-then-comes-the-night",
+    format: "single",
+    visibility: "private",
+    artworkUrl: "/uploads/artwork/but-then-comes-the-night.jpg",
+    notes: "Seed release for But Then Comes the Night.",
+    publishedAt: "2020-12-04T00:00:00.000Z",
+    trackIds: ["but-then-comes-the-night"]
   }
 ];
 
@@ -149,9 +171,8 @@ async function runStatement({ dialect, raw }, statement) {
 }
 
 async function seedTracksIfEmpty({ db, schema }) {
-  const result = await db.select({ value: count() }).from(schema.tracks);
-  const total = Number(result[0]?.value ?? 0);
-  if (total > 0) {
+  const existingTrack = await db.select().from(schema.tracks).limit(1);
+  if (existingTrack[0]) {
     return;
   }
 
@@ -166,14 +187,18 @@ async function seedTracksIfEmpty({ db, schema }) {
 }
 
 async function seedReleasesIfEmpty({ db, schema }) {
-  const result = await db.select({ value: count() }).from(schema.releases);
-  const total = Number(result[0]?.value ?? 0);
-  if (total > 0) {
-    return;
-  }
-
   const now = new Date().toISOString();
   for (const release of seedReleases) {
+    const existingRelease = await db
+      .select()
+      .from(schema.releases)
+      .where(eq(schema.releases.id, release.id))
+      .limit(1);
+
+    if (existingRelease[0]) {
+      continue;
+    }
+
     await db.insert(schema.releases).values({
       id: release.id,
       title: release.title,

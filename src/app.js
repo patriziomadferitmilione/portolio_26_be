@@ -124,7 +124,7 @@ function buildConfig() {
     UPLOAD_DIR: process.env.UPLOAD_DIR ?? "./uploads",
     PUBLIC_UPLOAD_BASE: process.env.PUBLIC_UPLOAD_BASE ?? "/uploads",
     MEDIA_SIGNING_SECRET: process.env.MEDIA_SIGNING_SECRET ?? "change-me",
-    MEDIA_BASE_URL: process.env.MEDIA_BASE_URL ?? "https://media.example.com",
+    MEDIA_BASE_URL: process.env.MEDIA_BASE_URL ?? "",
     ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "",
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "",
     ADMIN_NAME: process.env.ADMIN_NAME ?? "Patrizio Milione"

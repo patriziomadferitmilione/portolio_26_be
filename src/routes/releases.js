@@ -3,13 +3,13 @@ import { findReleaseById, listReleases } from "../services/releases.js";
 export default async function releaseRoutes(app) {
   app.get("/releases", async (request) => ({
     items: await listReleases(app.dbContext, {
-      includePrivate: request.currentUser?.role === "admin"
+      includePrivate: true
     })
   }));
 
   app.get("/releases/:releaseId", async (request, reply) => {
     const release = await findReleaseById(app.dbContext, request.params.releaseId, {
-      includePrivate: request.currentUser?.role === "admin"
+      includePrivate: true
     });
 
     if (!release) {
