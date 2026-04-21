@@ -56,6 +56,19 @@ export async function buildApp() {
   });
 
   app.addHook("onRequest", async (request, reply) => {
+    // 1. Check for Access Code Header (Frontend-only bypass)
+    const accessCode = request.headers["x-access-code"];
+    if (accessCode && accessCode === app.config.ADMIN_PASSWORD) {
+      request.currentUser = {
+        id: "admin-bypass",
+        email: app.config.ADMIN_EMAIL,
+        displayName: app.config.ADMIN_NAME,
+        role: "admin"
+      };
+      return;
+    }
+
+    // 2. Fallback to Session Cookie
     const token = request.cookies?.[app.config.SESSION_COOKIE_NAME];
     if (!token) {
       return;

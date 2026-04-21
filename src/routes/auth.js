@@ -8,8 +8,11 @@ import {
 } from "../services/auth.js";
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8)
+  email: z.string().email().optional(),
+  password: z.string().optional(),
+  accessCode: z.string().optional()
+}).refine((data) => (data.email && data.password) || data.accessCode, {
+  message: "Either (email AND password) OR accessCode is required"
 });
 
 export default async function authRoutes(app) {
@@ -32,8 +35,16 @@ export default async function authRoutes(app) {
       });
     }
 
-    const user = await findUserByEmail(app.dbContext, parsed.data.email);
-    const isValid = await verifyPassword(user, parsed.data.password);
+    const { email, password, accessCode } = parsed.data;
+    const loginEmail = email ?? app.config.ADMIN_EMAIL;
+    const loginPassword = password ?? accessCode;
+
+    if (!loginEmail || !loginPassword) {
+      return reply.code(401).send({ error: "Invalid credentials" });
+    }
+
+    const user = await findUserByEmail(app.dbContext, loginEmail);
+    const isValid = await verifyPassword(user, loginPassword);
 
     if (!user || !isValid) {
       return reply.code(401).send({ error: "Invalid credentials" });

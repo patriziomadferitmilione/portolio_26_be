@@ -42,7 +42,7 @@ const seedReleases = [
     slug: "vinegar",
     format: "single",
     visibility: "public",
-    artworkUrl: "/uploads/artwork/vinegar.jpg",
+    artworkUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&h=500&fit=crop",
     notes: "Seed release for the initial catalog foundation.",
     publishedAt: "2020-10-09T00:00:00.000Z",
     trackIds: ["vinegar"]
@@ -53,7 +53,7 @@ const seedReleases = [
     slug: "soda-and-lime",
     format: "single",
     visibility: "public",
-    artworkUrl: "/uploads/artwork/soda-and-lime.jpg",
+    artworkUrl: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&h=500&fit=crop",
     notes: "Seed release for Soda & Lime.",
     publishedAt: "2020-11-13T00:00:00.000Z",
     trackIds: ["soda-and-lime"]
@@ -64,7 +64,7 @@ const seedReleases = [
     slug: "but-then-comes-the-night",
     format: "single",
     visibility: "private",
-    artworkUrl: "/uploads/artwork/but-then-comes-the-night.jpg",
+    artworkUrl: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=500&h=500&fit=crop",
     notes: "Seed release for But Then Comes the Night.",
     publishedAt: "2020-12-04T00:00:00.000Z",
     trackIds: ["but-then-comes-the-night"]
@@ -113,10 +113,11 @@ async function createTables(dbContext) {
       visibility TEXT NOT NULL,
       storage_key TEXT NOT NULL,
       release_label TEXT NOT NULL,
+      lyrics TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     )`
-  );
+    );
   await runStatement(
     dbContext,
     `CREATE TABLE IF NOT EXISTS releases (

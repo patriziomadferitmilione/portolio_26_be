@@ -1,4 +1,4 @@
-import { integer, pgTable, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
@@ -27,6 +27,7 @@ export const tracks = pgTable("tracks", {
   visibility: text("visibility").notNull(),
   storageKey: text("storage_key").notNull(),
   releaseLabel: text("release_label").notNull(),
+  lyrics: text("lyrics"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull()
 });

@@ -33,6 +33,7 @@ export async function createTrack(dbContext, input) {
     visibility: input.visibility,
     storageKey: input.storageKey,
     releaseLabel: input.releaseLabel,
+    lyrics: input.lyrics ?? null,
     createdAt: now,
     updatedAt: now
   };
@@ -56,6 +57,7 @@ export async function updateTrack(dbContext, trackId, input) {
     visibility: input.visibility ?? existing.visibility,
     storageKey: input.storageKey ?? existing.storageKey,
     releaseLabel: input.releaseLabel ?? existing.releaseLabel,
+    lyrics: input.lyrics ?? existing.lyrics,
     updatedAt: new Date().toISOString()
   };
 
