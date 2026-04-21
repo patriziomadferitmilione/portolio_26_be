@@ -28,7 +28,8 @@ export const tracks = sqliteTable("tracks", {
   storageKey: text("storage_key").notNull(),
   releaseLabel: text("release_label").notNull(),
   lyrics: text("lyrics"),
-  createdAt: text("created_at").notNull(),  updatedAt: text("updated_at").notNull()
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull()
 });
 
 export const releases = sqliteTable("releases", {
