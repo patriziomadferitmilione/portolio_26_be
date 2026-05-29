@@ -56,6 +56,19 @@ export async function buildApp() {
   });
 
   app.addHook("onRequest", async (request, reply) => {
+    // 1. Check for Access Code Header (Frontend-only bypass)
+    const accessCode = request.headers["x-access-code"];
+    if (accessCode && accessCode === app.config.ADMIN_PASSWORD) {
+      request.currentUser = {
+        id: "admin-bypass",
+        email: app.config.ADMIN_EMAIL,
+        displayName: app.config.ADMIN_NAME,
+        role: "admin"
+      };
+      return;
+    }
+
+    // 2. Fallback to Session Cookie
     const token = request.cookies?.[app.config.SESSION_COOKIE_NAME];
     if (!token) {
       return;
@@ -124,7 +137,7 @@ function buildConfig() {
     UPLOAD_DIR: process.env.UPLOAD_DIR ?? "./uploads",
     PUBLIC_UPLOAD_BASE: process.env.PUBLIC_UPLOAD_BASE ?? "/uploads",
     MEDIA_SIGNING_SECRET: process.env.MEDIA_SIGNING_SECRET ?? "change-me",
-    MEDIA_BASE_URL: process.env.MEDIA_BASE_URL ?? "https://media.example.com",
+    MEDIA_BASE_URL: process.env.MEDIA_BASE_URL ?? "",
     ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "",
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "",
     ADMIN_NAME: process.env.ADMIN_NAME ?? "Patrizio Milione"

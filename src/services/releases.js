@@ -1,6 +1,18 @@
 import crypto from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
 
+function normalizeArtworkUrl(artworkUrl) {
+  if (!artworkUrl) {
+    return artworkUrl;
+  }
+
+  if (artworkUrl.startsWith("/artwork/")) {
+    return artworkUrl.replace("/artwork/", "/uploads/artwork/");
+  }
+
+  return artworkUrl;
+}
+
 async function attachTracks(dbContext, releases, includePrivate) {
   const { db, schema } = dbContext;
   if (!releases.length) {
@@ -31,6 +43,7 @@ async function attachTracks(dbContext, releases, includePrivate) {
 
     return {
       ...release,
+      artworkUrl: normalizeArtworkUrl(release.artworkUrl),
       tracks: orderedTracks
     };
   });
