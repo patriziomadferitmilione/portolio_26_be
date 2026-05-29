@@ -48,7 +48,10 @@ function buildPlaybackBaseUrl(request, fallbackBaseUrl) {
 
 function resolveStoragePath(uploadDir, storageKey) {
   const uploadRoot = path.resolve(uploadDir);
-  const targetPath = path.resolve(uploadRoot, storageKey);
+  const normalizedKey = storageKey.startsWith("/uploads/")
+    ? storageKey.replace(/^\/uploads\//, "")
+    : storageKey.replace(/^\/+/, "");
+  const targetPath = path.resolve(uploadRoot, normalizedKey);
 
   if (!targetPath.startsWith(uploadRoot)) {
     return null;

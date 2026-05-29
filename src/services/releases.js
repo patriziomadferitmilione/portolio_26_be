@@ -7,7 +7,7 @@ function normalizeArtworkUrl(artworkUrl) {
   }
 
   if (artworkUrl.startsWith("/artwork/")) {
-    return artworkUrl.replace("/artwork/", "/uploads/artwork/");
+    return artworkUrl.replace("/artwork/", "/uploads/media/artwork/");
   }
 
   return artworkUrl;
@@ -39,11 +39,18 @@ async function attachTracks(dbContext, releases, includePrivate) {
       .map((link) => trackMap.get(link.trackId))
       .filter(Boolean)
       .filter((track) => includePrivate || track.visibility === "public")
-      .map(({ storageKey, ...track }) => track);
+      .map(({ audioPath, ...track }) => ({
+        ...track,
+        audioPath: audioPath ?? "",
+        storageKey: audioPath ?? ""
+      }));
+
+    const artworkPath = release.artworkPath ?? "";
 
     return {
       ...release,
-      artworkUrl: normalizeArtworkUrl(release.artworkUrl),
+      artworkPath,
+      artworkUrl: normalizeArtworkUrl(artworkPath),
       tracks: orderedTracks
     };
   });
@@ -86,7 +93,7 @@ export async function createRelease(dbContext, input) {
     slug: input.slug,
     format: input.format,
     visibility: input.visibility,
-    artworkUrl: input.artworkUrl,
+    artworkPath: input.artworkPath ?? input.artworkUrl ?? "",
     notes: input.notes,
     publishedAt: input.publishedAt ?? null,
     createdAt: now,
@@ -121,7 +128,7 @@ export async function updateRelease(dbContext, releaseId, input) {
       slug: input.slug ?? existing.slug,
       format: input.format ?? existing.format,
       visibility: input.visibility ?? existing.visibility,
-      artworkUrl: input.artworkUrl ?? existing.artworkUrl,
+      artworkPath: input.artworkPath ?? input.artworkUrl ?? existing.artworkPath,
       notes: input.notes ?? existing.notes,
       publishedAt: input.publishedAt === undefined ? existing.publishedAt : input.publishedAt,
       updatedAt: new Date().toISOString()

@@ -8,19 +8,24 @@ import {
   updateRelease
 } from "../services/releases.js";
 
-const createReleaseSchema = z.object({
+const releaseBaseSchema = z.object({
   id: z.string().min(1).optional(),
   title: z.string().min(1),
   slug: z.string().min(1),
   format: z.enum(["single", "ep", "album", "demo"]),
   visibility: z.enum(["public", "private"]),
-  artworkUrl: z.string().min(1),
+  artworkPath: z.string().min(1).optional(),
+  artworkUrl: z.string().min(1).optional(),
   notes: z.string().min(1),
   publishedAt: z.string().datetime().nullable().optional(),
   trackIds: z.array(z.string().min(1))
 });
 
-const updateReleaseSchema = createReleaseSchema.partial().refine(
+const createReleaseSchema = releaseBaseSchema.refine((value) => Boolean(value.artworkPath ?? value.artworkUrl), {
+  message: "Artwork path is required"
+});
+
+const updateReleaseSchema = releaseBaseSchema.partial().refine(
   (value) => Object.keys(value).length > 0,
   { message: "At least one field is required" }
 );

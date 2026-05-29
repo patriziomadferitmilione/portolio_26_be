@@ -7,7 +7,11 @@ export async function listTracks(dbContext, { includePrivate = false } = {}) {
     ? await db.select().from(schema.tracks)
     : await db.select().from(schema.tracks).where(eq(schema.tracks.visibility, "public"));
 
-  return rows.map(({ storageKey, ...track }) => track);
+  return rows.map(({ audioPath, ...track }) => ({
+    ...track,
+    audioPath: audioPath ?? "",
+    storageKey: audioPath ?? ""
+  }));
 }
 
 export async function findTrackById(dbContext, trackId) {
@@ -24,6 +28,7 @@ export async function findTrackById(dbContext, trackId) {
 export async function createTrack(dbContext, input) {
   const { db, schema } = dbContext;
   const now = new Date().toISOString();
+  const audioPath = input.audioPath ?? input.storageKey ?? "";
   const payload = {
     id: input.id ?? crypto.randomUUID(),
     title: input.title,
@@ -31,7 +36,7 @@ export async function createTrack(dbContext, input) {
     mood: input.mood,
     duration: input.duration,
     visibility: input.visibility,
-    storageKey: input.storageKey,
+    audioPath,
     releaseLabel: input.releaseLabel,
     lyrics: input.lyrics ?? null,
     createdAt: now,
@@ -39,7 +44,10 @@ export async function createTrack(dbContext, input) {
   };
 
   await db.insert(schema.tracks).values(payload);
-  return payload;
+  return {
+    ...payload,
+    storageKey: audioPath
+  };
 }
 
 export async function updateTrack(dbContext, trackId, input) {
@@ -55,7 +63,7 @@ export async function updateTrack(dbContext, trackId, input) {
     mood: input.mood ?? existing.mood,
     duration: input.duration ?? existing.duration,
     visibility: input.visibility ?? existing.visibility,
-    storageKey: input.storageKey ?? existing.storageKey,
+    audioPath: input.audioPath ?? input.storageKey ?? existing.audioPath,
     releaseLabel: input.releaseLabel ?? existing.releaseLabel,
     lyrics: input.lyrics ?? existing.lyrics,
     updatedAt: new Date().toISOString()

@@ -8,18 +8,24 @@ import {
   updateTrack
 } from "../services/catalog.js";
 
-const trackCreateSchema = z.object({
+const trackBaseSchema = z.object({
   id: z.string().min(1).optional(),
   title: z.string().min(1),
   artist: z.string().min(1),
   mood: z.string().min(1),
   duration: z.number().int().nonnegative(),
   visibility: z.enum(["public", "private"]),
-  storageKey: z.string().min(1),
-  releaseLabel: z.string().min(1)
+  audioPath: z.string().min(1).optional(),
+  storageKey: z.string().min(1).optional(),
+  releaseLabel: z.string().min(1),
+  lyrics: z.string().optional()
 });
 
-const trackUpdateSchema = trackCreateSchema.partial().refine(
+const trackCreateSchema = trackBaseSchema.refine((value) => Boolean(value.audioPath ?? value.storageKey), {
+  message: "Audio path is required"
+});
+
+const trackUpdateSchema = trackBaseSchema.partial().refine(
   (value) => Object.keys(value).length > 0,
   { message: "At least one field is required" }
 );
@@ -37,7 +43,12 @@ export default async function adminTrackRoutes(app) {
       return reply.code(404).send({ error: "Track not found" });
     }
 
-    return { item: track };
+    return {
+      item: {
+        ...track,
+        storageKey: track.audioPath ?? ""
+      }
+    };
   });
 
   app.post("/admin/tracks", { preHandler: requireAdmin }, async (request, reply) => {
@@ -67,7 +78,12 @@ export default async function adminTrackRoutes(app) {
       return reply.code(404).send({ error: "Track not found" });
     }
 
-    return { item: track };
+    return {
+      item: {
+        ...track,
+        storageKey: track.audioPath ?? ""
+      }
+    };
   });
 
   app.delete("/admin/tracks/:trackId", { preHandler: requireAdmin }, async (request, reply) => {

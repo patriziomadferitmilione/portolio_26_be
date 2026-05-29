@@ -4,17 +4,41 @@ import path from "node:path";
 
 import { desc } from "drizzle-orm";
 
+function sanitizeFilename(filename) {
+  const baseName = path.basename(filename).trim();
+  const safeName = baseName
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return safeName || "file";
+}
+
+function ensureUniqueFilename(dir, filename) {
+  const ext = path.extname(filename);
+  const base = path.basename(filename, ext);
+  let candidate = filename;
+  let index = 1;
+
+  while (fs.existsSync(path.join(dir, candidate))) {
+    candidate = `${base} (${index})${ext}`;
+    index += 1;
+  }
+
+  return candidate;
+}
+
 export async function saveUploadedAsset(dbContext, config, { fileBuffer, originalName, mimeType, category, uploadedByUserId }) {
-  const ext = path.extname(originalName) || "";
+  const safeOriginalName = sanitizeFilename(originalName);
   const safeCategory = category.replace(/[^a-z0-9-]/gi, "").toLowerCase() || "misc";
-  const filename = `${Date.now()}-${crypto.randomUUID()}${ext}`;
-  const targetDir = path.resolve(config.UPLOAD_DIR, safeCategory);
+  const targetDir = path.resolve(config.UPLOAD_DIR, "media", safeCategory);
   fs.mkdirSync(targetDir, { recursive: true });
 
+  const filename = ensureUniqueFilename(targetDir, safeOriginalName);
   const fullPath = path.join(targetDir, filename);
   fs.writeFileSync(fullPath, fileBuffer);
 
-  const relativePath = path.posix.join(safeCategory, filename);
+  const relativePath = path.posix.join("media", safeCategory, filename);
   const publicUrl = `${config.PUBLIC_UPLOAD_BASE}/${relativePath}`;
   const now = new Date().toISOString();
 
@@ -24,6 +48,7 @@ export async function saveUploadedAsset(dbContext, config, { fileBuffer, origina
     originalName,
     mimeType,
     category: safeCategory,
+    path: publicUrl,
     url: publicUrl,
     storagePath: fullPath,
     size: fileBuffer.length,
