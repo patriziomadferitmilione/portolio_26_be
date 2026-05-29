@@ -1,38 +1,40 @@
 # portolio_26_be
 
-Backend API for the portfolio_26 music platform.
+Backend API for music streaming app.
 
-## Planned stack
+## What it does now
+
+- Health check
+- Public tracks and releases
+- Signed playback authorization
+- Cookie-backed admin auth
+- Admin CRUD for tracks and releases
+- Admin media uploads
+- Local upload storage and public file serving
+
+## Runtime
 
 - Node.js
 - Fastify
 - Drizzle ORM
-- SQLite for local development
-- PostgreSQL for production
+- SQLite local, PostgreSQL prod
 - Cookie sessions for web auth
-- JWT for playback and media delegation
-- Object storage + signed media URLs
+- JWT plugin installed, but current auth flow uses sessions
 
-## Initial goals
+## Important env
 
-- Health check and API bootstrap
-- Track metadata endpoints
-- Upload and playback authorization flow
-
-## Local and Production Database
-
-- Local development defaults to SQLite using `./data/local.db`
-- Production defaults to PostgreSQL using `DATABASE_URL`
-- Override behavior explicitly with `DB_CLIENT=sqlite` or `DB_CLIENT=postgres`
-
-## Auth Foundation
-
-- Web auth uses cookie-backed sessions stored in the database
-- Playback can continue to use short-lived signed URLs or JWT-backed delegation later
-- An initial admin user is seeded automatically when `ADMIN_EMAIL` and `ADMIN_PASSWORD` are set
-
-## Uploads
-
-- Admin media uploads are stored locally under `UPLOAD_DIR` in development
-- Uploaded assets are exposed publicly under `PUBLIC_UPLOAD_BASE`
-- The backend persists uploaded asset metadata in the `media_assets` table
+- `DB_CLIENT`
+- `SQLITE_DB_PATH`
+- `DATABASE_URL`
+- `PORT`
+- `HOST`
+- `JWT_SECRET`
+- `COOKIE_SECRET`
+- `SESSION_COOKIE_NAME`
+- `UPLOAD_DIR`
+- `PUBLIC_UPLOAD_BASE`
+- `MEDIA_SIGNING_SECRET`
+- `MEDIA_BASE_URL`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_NAME`

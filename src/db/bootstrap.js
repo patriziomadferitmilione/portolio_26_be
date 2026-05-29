@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import argon2 from "argon2";
-import { count, eq } from "drizzle-orm";
+import { count } from "drizzle-orm";
 
 const seedTracks = [
   {
@@ -49,11 +49,17 @@ const seedReleases = [
   }
 ];
 
-export async function bootstrapDatabase(dbContext, config) {
+const seedAdminUser = {
+  email: "patriziomilione@gmail.com",
+  password: "yes",
+  displayName: "Patrizio Milione"
+};
+
+export async function bootstrapDatabase(dbContext) {
   await createTables(dbContext);
   await seedTracksIfEmpty(dbContext);
   await seedReleasesIfEmpty(dbContext);
-  await seedAdminIfConfigured(dbContext, config);
+  await seedAdminIfEmpty(dbContext);
 }
 
 async function createTables(dbContext) {
@@ -198,27 +204,19 @@ async function seedReleasesIfEmpty({ db, schema }) {
   }
 }
 
-async function seedAdminIfConfigured({ db, schema }, config) {
-  if (!config.ADMIN_EMAIL || !config.ADMIN_PASSWORD) {
-    return;
-  }
-
-  const existing = await db
-    .select()
-    .from(schema.users)
-    .where(eq(schema.users.email, config.ADMIN_EMAIL))
-    .limit(1);
-
-  if (existing[0]) {
+async function seedAdminIfEmpty({ db, schema }) {
+  const result = await db.select({ value: count() }).from(schema.users);
+  const total = Number(result[0]?.value ?? 0);
+  if (total > 0) {
     return;
   }
 
   const now = new Date().toISOString();
   await db.insert(schema.users).values({
     id: crypto.randomUUID(),
-    email: config.ADMIN_EMAIL,
-    passwordHash: await argon2.hash(config.ADMIN_PASSWORD),
-    displayName: config.ADMIN_NAME ?? "Patrizio Milione",
+    email: seedAdminUser.email,
+    passwordHash: await argon2.hash(seedAdminUser.password),
+    displayName: seedAdminUser.displayName,
     role: "admin",
     createdAt: now,
     updatedAt: now

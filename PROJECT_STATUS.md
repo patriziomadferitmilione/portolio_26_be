@@ -11,42 +11,34 @@
 - Added database-backed track and release endpoints.
 - Added admin CRUD routes for tracks and releases.
 - Added media asset upload, storage, and local static serving for uploaded files.
+- Added signed playback URL generation for track streaming.
 
 ## Current Backend Shape
 
 - Runtime: Node.js
 - Framework: Fastify
 - Validation: Zod
-- Auth foundation: JWT plugin installed
-- Main feature in progress: protected media delivery for the music platform
+- Auth foundation: cookie sessions in use, JWT plugin installed but not yet core path
+- Main feature in progress: tighter music streaming delivery and media handling
 
 ## Product Model Direction
 
 - Public music experience for listeners
 - Private admin experience for Patrizio as creator
-- User system prepared for future listener accounts and gated content
 - Backend owns media permissions, publishing state, and content operations
 
 ## Core Backend Domains
 
 - `users`
-  - Roles: `admin`, later `editor`, `listener`
+  - Roles: `admin`
 - `tracks`
   - Metadata, visibility, audio asset references, lyrics, credits
 - `releases`
   - Singles, EPs, albums, artwork, notes, publish state
 - `release_tracks`
   - Track ordering and release composition
-- `shows`
-  - Live events, venues, dates, notes
-- `writings`
-  - Lyrics, notes, stories, drafts
 - `media_assets`
   - Artwork, banners, photos, other uploaded files
-- `site_sections`
-  - Editable homepage and static content blocks
-- `playback_permissions`
-  - Public, private, preview, or user-gated playback rules
 
 ## Backend Operations To Support
 
@@ -69,50 +61,28 @@
   - Persist media metadata
   - Serve uploaded assets locally
   - Associate assets with tracks, releases, and pages
-- `Live Management`
-  - Create show
-  - Update show
-  - Archive past show
-- `Writing Management`
-  - Create lyric or note
-  - Save draft
-  - Publish entry
-- `Site Content Management`
-  - Edit hero text
-  - Edit about text
-  - Edit featured sections
-  - Edit contact and platform links
 - `Playback Authorization`
   - Return signed playback URL for authorized users or public tracks
   - Deny or restrict private content
-- `User Features Later`
-  - Listener accounts
-  - Favorites
-  - Private access entitlements
 
 ## Backend Implementation Phases
 
 - `Phase 1`
   - Add persistent database models
   - Add authentication and admin role protection
-  - Replace in-memory catalog with database-backed queries
+  - Keep catalog database-backed
 - `Phase 2`
-  - Add CRUD endpoints for tracks, releases, shows, writings, and site content
-  - Add upload flow and media asset storage integration
+  - Tighten upload flow and media asset handling
 - `Phase 3`
   - Replace local signing stub with real signed CDN or storage URLs
-  - Add publish state, preview rules, and access-control enforcement
-- `Phase 4`
-  - Add listener user accounts and user-specific features
-  - Add analytics and engagement tracking
+  - Add publish state and access-control enforcement
 
 ## Immediate Next Steps
 
 - Add file validation, size limits, and media cleanup policies
-- Add show, writing, and site-content entities
 - Add richer publish-state rules and preview support
 - Move from local upload storage to production object storage integration
-- Add analytics and more granular role handling
+- Add playlist or release-dedicated playback improvements
 
 ## Notes
 
