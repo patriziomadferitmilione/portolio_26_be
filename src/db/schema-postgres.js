@@ -26,6 +26,7 @@ export const tracks = pgTable("tracks", {
   duration: integer("duration").notNull(),
   visibility: text("visibility").notNull(),
   audioPath: text("audio_path").notNull(),
+  artworkPath: text("artwork_path"),
   releaseLabel: text("release_label").notNull(),
   lyrics: text("lyrics"),
   createdAt: text("created_at").notNull(),

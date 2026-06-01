@@ -119,6 +119,9 @@ function buildConfig() {
   const nodeEnv = process.env.NODE_ENV ?? "development";
   const dbClient = process.env.DB_CLIENT
     ?? (nodeEnv === "production" ? "postgres" : "sqlite");
+  const seedDemoData = process.env.SEED_DEMO_DATA
+    ? process.env.SEED_DEMO_DATA === "true"
+    : nodeEnv !== "production";
 
   if (dbClient === "postgres" && !process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required when DB_CLIENT is postgres");
@@ -138,6 +141,7 @@ function buildConfig() {
     PUBLIC_UPLOAD_BASE: process.env.PUBLIC_UPLOAD_BASE ?? "/uploads",
     MEDIA_SIGNING_SECRET: process.env.MEDIA_SIGNING_SECRET ?? "change-me",
     MEDIA_BASE_URL: process.env.MEDIA_BASE_URL ?? "",
+    SEED_DEMO_DATA: seedDemoData,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "",
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "",
     ADMIN_NAME: process.env.ADMIN_NAME ?? "Patrizio Milione"

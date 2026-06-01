@@ -55,11 +55,13 @@ const seedAdminUser = {
   displayName: "Patrizio Milione"
 };
 
-export async function bootstrapDatabase(dbContext) {
+export async function bootstrapDatabase(dbContext, config = {}) {
   await createTables(dbContext);
   await ensurePathColumns(dbContext);
-  await seedTracksIfEmpty(dbContext);
-  await seedReleasesIfEmpty(dbContext);
+  if (config.SEED_DEMO_DATA) {
+    await seedTracksIfEmpty(dbContext);
+    await seedReleasesIfEmpty(dbContext);
+  }
   await seedAdminIfEmpty(dbContext);
 }
 
@@ -97,6 +99,7 @@ async function createTables(dbContext) {
       duration INTEGER NOT NULL,
       visibility TEXT NOT NULL,
       audio_path TEXT NOT NULL,
+      artwork_path TEXT,
       release_label TEXT NOT NULL,
       lyrics TEXT,
       created_at TEXT NOT NULL,
@@ -156,6 +159,7 @@ async function ensurePathColumns(dbContext) {
   const addColumnStatements = dialect === "postgres"
     ? [
         `ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_path TEXT`,
+        `ALTER TABLE tracks ADD COLUMN IF NOT EXISTS artwork_path TEXT`,
         `ALTER TABLE releases ADD COLUMN IF NOT EXISTS artwork_path TEXT`,
         `ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS path TEXT`
       ]
@@ -168,6 +172,9 @@ async function ensurePathColumns(dbContext) {
   if (dialect === "sqlite") {
     if (!existingColumns.tracks.includes("audio_path")) {
       await runStatement(dbContext, `ALTER TABLE tracks ADD COLUMN audio_path TEXT`);
+    }
+    if (!existingColumns.tracks.includes("artwork_path")) {
+      await runStatement(dbContext, `ALTER TABLE tracks ADD COLUMN artwork_path TEXT`);
     }
     if (!existingColumns.releases.includes("artwork_path")) {
       await runStatement(dbContext, `ALTER TABLE releases ADD COLUMN artwork_path TEXT`);

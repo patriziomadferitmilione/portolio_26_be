@@ -7,9 +7,10 @@ export async function listTracks(dbContext, { includePrivate = false } = {}) {
     ? await db.select().from(schema.tracks)
     : await db.select().from(schema.tracks).where(eq(schema.tracks.visibility, "public"));
 
-  return rows.map(({ audioPath, ...track }) => ({
+  return rows.map(({ audioPath, artworkPath, ...track }) => ({
     ...track,
     audioPath: audioPath ?? "",
+    artworkPath: artworkPath ?? "",
     storageKey: audioPath ?? ""
   }));
 }
@@ -37,6 +38,7 @@ export async function createTrack(dbContext, input) {
     duration: input.duration,
     visibility: input.visibility,
     audioPath,
+    artworkPath: input.artworkPath ?? null,
     releaseLabel: input.releaseLabel,
     lyrics: input.lyrics ?? null,
     createdAt: now,
@@ -64,6 +66,7 @@ export async function updateTrack(dbContext, trackId, input) {
     duration: input.duration ?? existing.duration,
     visibility: input.visibility ?? existing.visibility,
     audioPath: input.audioPath ?? input.storageKey ?? existing.audioPath,
+    artworkPath: input.artworkPath === undefined ? (existing.artworkPath ?? null) : input.artworkPath,
     releaseLabel: input.releaseLabel ?? existing.releaseLabel,
     lyrics: input.lyrics ?? existing.lyrics,
     updatedAt: new Date().toISOString()

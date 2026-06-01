@@ -16,6 +16,7 @@ const trackBaseSchema = z.object({
   duration: z.number().int().nonnegative(),
   visibility: z.enum(["public", "private"]),
   audioPath: z.string().min(1).optional(),
+  artworkPath: z.string().optional(),
   storageKey: z.string().min(1).optional(),
   releaseLabel: z.string().min(1),
   lyrics: z.string().optional()
