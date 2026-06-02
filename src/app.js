@@ -46,6 +46,18 @@ export async function buildApp() {
 
   fs.mkdirSync(path.resolve(app.config.UPLOAD_DIR), { recursive: true });
 
+  app.addHook("onRequest", async (request, reply) => {
+    const uploadBase = app.config.PUBLIC_UPLOAD_BASE.replace(/\/$/, "");
+    const requestPath = request.url.split("?")[0];
+
+    if (
+      request.method !== "OPTIONS"
+      && requestPath.startsWith(`${uploadBase}/media/audio/`)
+    ) {
+      return reply.code(404).send({ error: "Media file not found" });
+    }
+  });
+
   app.register(fastifyStatic, {
     root: path.resolve(app.config.UPLOAD_DIR),
     prefix: `${app.config.PUBLIC_UPLOAD_BASE}/`
@@ -127,7 +139,7 @@ function buildConfig() {
     throw new Error("DATABASE_URL is required when DB_CLIENT is postgres");
   }
 
-  return {
+  const config = {
     NODE_ENV: nodeEnv,
     DB_CLIENT: dbClient,
     DATABASE_URL: process.env.DATABASE_URL ?? "",
@@ -146,4 +158,25 @@ function buildConfig() {
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "",
     ADMIN_NAME: process.env.ADMIN_NAME ?? "Patrizio Milione"
   };
+
+  validateProductionConfig(config);
+  return config;
+}
+
+function validateProductionConfig(config) {
+  if (config.NODE_ENV !== "production") {
+    return;
+  }
+
+  const unsafeSecrets = [
+    ["JWT_SECRET", config.JWT_SECRET],
+    ["COOKIE_SECRET", config.COOKIE_SECRET],
+    ["MEDIA_SIGNING_SECRET", config.MEDIA_SIGNING_SECRET]
+  ].filter(([, value]) => !value || value === "change-me");
+
+  if (unsafeSecrets.length) {
+    throw new Error(
+      `Production requires strong values for: ${unsafeSecrets.map(([key]) => key).join(", ")}`
+    );
+  }
 }

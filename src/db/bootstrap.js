@@ -49,12 +49,6 @@ const seedReleases = [
   }
 ];
 
-const seedAdminUser = {
-  email: "patriziomilione@gmail.com",
-  password: "yes",
-  displayName: "Patrizio Milione"
-};
-
 export async function bootstrapDatabase(dbContext, config = {}) {
   await createTables(dbContext);
   await ensurePathColumns(dbContext);
@@ -62,7 +56,7 @@ export async function bootstrapDatabase(dbContext, config = {}) {
     await seedTracksIfEmpty(dbContext);
     await seedReleasesIfEmpty(dbContext);
   }
-  await seedAdminIfEmpty(dbContext);
+  await seedAdminIfEmpty(dbContext, config);
 }
 
 async function createTables(dbContext) {
@@ -305,19 +299,23 @@ async function seedReleasesIfEmpty({ db, schema }) {
   }
 }
 
-async function seedAdminIfEmpty({ db, schema }) {
+async function seedAdminIfEmpty({ db, schema }, config = {}) {
   const result = await db.select({ value: count() }).from(schema.users);
   const total = Number(result[0]?.value ?? 0);
   if (total > 0) {
     return;
   }
 
+  if (!config.ADMIN_EMAIL || !config.ADMIN_PASSWORD) {
+    return;
+  }
+
   const now = new Date().toISOString();
   await db.insert(schema.users).values({
     id: crypto.randomUUID(),
-    email: seedAdminUser.email,
-    passwordHash: await argon2.hash(seedAdminUser.password),
-    displayName: seedAdminUser.displayName,
+    email: config.ADMIN_EMAIL,
+    passwordHash: await argon2.hash(config.ADMIN_PASSWORD),
+    displayName: config.ADMIN_NAME || "Admin",
     role: "admin",
     createdAt: now,
     updatedAt: now

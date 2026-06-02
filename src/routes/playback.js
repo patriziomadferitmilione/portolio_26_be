@@ -10,14 +10,15 @@ const playbackSchema = z.object({
 });
 
 function createSignedPlaybackUrl({ baseUrl, storageKey, signingSecret, ttlSeconds = 300 }) {
+  const normalizedStorageKey = normalizeStorageKey(storageKey);
   const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
-  const payload = `${storageKey}:${expiresAt}`;
+  const payload = `${normalizedStorageKey}:${expiresAt}`;
   const signature = crypto
     .createHmac("sha256", signingSecret)
     .update(payload)
     .digest("hex");
 
-  const url = new URL(storageKey, `${baseUrl.replace(/\/$/, "")}/`);
+  const url = new URL(`${baseUrl.replace(/\/$/, "")}/${encodeStorageKey(normalizedStorageKey)}`);
   url.searchParams.set("expires", String(expiresAt));
   url.searchParams.set("signature", signature);
   return url.toString();
@@ -46,14 +47,26 @@ function buildPlaybackBaseUrl(request, fallbackBaseUrl) {
   return `${protocol}://${host}/api/playback/media`;
 }
 
+function normalizeStorageKey(storageKey) {
+  return String(storageKey ?? "")
+    .replace(/^\/uploads\//, "")
+    .replace(/^\/+/, "");
+}
+
+function encodeStorageKey(storageKey) {
+  return normalizeStorageKey(storageKey)
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+}
+
 function resolveStoragePath(uploadDir, storageKey) {
   const uploadRoot = path.resolve(uploadDir);
-  const normalizedKey = storageKey.startsWith("/uploads/")
-    ? storageKey.replace(/^\/uploads\//, "")
-    : storageKey.replace(/^\/+/, "");
+  const normalizedKey = normalizeStorageKey(storageKey);
   const targetPath = path.resolve(uploadRoot, normalizedKey);
+  const relativePath = path.relative(uploadRoot, targetPath);
 
-  if (!targetPath.startsWith(uploadRoot)) {
+  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
     return null;
   }
 
@@ -90,11 +103,15 @@ export default async function playbackRoutes(app) {
       return reply.code(404).send({ error: "Track not found" });
     }
 
+    if (track.visibility !== "public" && request.currentUser?.role !== "admin") {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
     return {
       trackId: track.id,
       streamUrl: createSignedPlaybackUrl({
         baseUrl: buildPlaybackBaseUrl(request, app.config.MEDIA_BASE_URL),
-        storageKey: track.storageKey,
+        storageKey: track.audioPath,
         signingSecret: app.config.MEDIA_SIGNING_SECRET
       }),
       expiresIn: 300
