@@ -13,7 +13,7 @@ const trackBaseSchema = z.object({
   title: z.string().min(1),
   artist: z.string().min(1),
   mood: z.string().min(1),
-  duration: z.number().int().nonnegative(),
+  duration: z.number().int().nonnegative().optional(),
   visibility: z.enum(["public", "private"]),
   audioPath: z.string().min(1).optional(),
   artworkPath: z.string().optional(),
@@ -61,7 +61,7 @@ export default async function adminTrackRoutes(app) {
       });
     }
 
-    const track = await createTrack(app.dbContext, parsed.data);
+    const track = await createTrack(app.dbContext, parsed.data, app.config);
     return reply.code(201).send({ item: track });
   });
 
@@ -74,7 +74,7 @@ export default async function adminTrackRoutes(app) {
       });
     }
 
-    const track = await updateTrack(app.dbContext, request.params.trackId, parsed.data);
+    const track = await updateTrack(app.dbContext, request.params.trackId, parsed.data, app.config);
     if (!track) {
       return reply.code(404).send({ error: "Track not found" });
     }

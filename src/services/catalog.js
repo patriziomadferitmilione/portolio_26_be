@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
 
+import { readUploadedAudioDuration } from "./audio-duration.js";
+
 export async function listTracks(dbContext, { includePrivate = false } = {}) {
   const { db, schema } = dbContext;
   const rows = includePrivate
@@ -26,16 +28,17 @@ export async function findTrackById(dbContext, trackId) {
   return rows[0] ?? null;
 }
 
-export async function createTrack(dbContext, input) {
+export async function createTrack(dbContext, input, config = {}) {
   const { db, schema } = dbContext;
   const now = new Date().toISOString();
   const audioPath = input.audioPath ?? input.storageKey ?? "";
+  const detectedDuration = await readUploadedAudioDuration(config, audioPath);
   const payload = {
     id: input.id ?? crypto.randomUUID(),
     title: input.title,
     artist: input.artist,
     mood: input.mood,
-    duration: input.duration,
+    duration: detectedDuration ?? input.duration ?? 0,
     visibility: input.visibility,
     audioPath,
     artworkPath: input.artworkPath ?? null,
@@ -52,20 +55,26 @@ export async function createTrack(dbContext, input) {
   };
 }
 
-export async function updateTrack(dbContext, trackId, input) {
+export async function updateTrack(dbContext, trackId, input, config = {}) {
   const { db, schema } = dbContext;
   const existing = await findTrackById(dbContext, trackId);
   if (!existing) {
     return null;
   }
 
+  const nextAudioPath = input.audioPath ?? input.storageKey ?? existing.audioPath;
+  const audioPathChanged = nextAudioPath !== existing.audioPath;
+  const detectedDuration = audioPathChanged
+    ? await readUploadedAudioDuration(config, nextAudioPath)
+    : null;
+
   const payload = {
     title: input.title ?? existing.title,
     artist: input.artist ?? existing.artist,
     mood: input.mood ?? existing.mood,
-    duration: input.duration ?? existing.duration,
+    duration: detectedDuration ?? input.duration ?? existing.duration,
     visibility: input.visibility ?? existing.visibility,
-    audioPath: input.audioPath ?? input.storageKey ?? existing.audioPath,
+    audioPath: nextAudioPath,
     artworkPath: input.artworkPath === undefined ? (existing.artworkPath ?? null) : input.artworkPath,
     releaseLabel: input.releaseLabel ?? existing.releaseLabel,
     lyrics: input.lyrics ?? existing.lyrics,

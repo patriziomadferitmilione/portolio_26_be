@@ -138,6 +138,7 @@ async function createTables(dbContext) {
       url TEXT NOT NULL,
       storage_path TEXT NOT NULL,
       size INTEGER NOT NULL,
+      duration INTEGER,
       uploaded_by_user_id TEXT,
       created_at TEXT NOT NULL,
       FOREIGN KEY (uploaded_by_user_id) REFERENCES users(id) ON DELETE SET NULL
@@ -155,7 +156,8 @@ async function ensurePathColumns(dbContext) {
         `ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_path TEXT`,
         `ALTER TABLE tracks ADD COLUMN IF NOT EXISTS artwork_path TEXT`,
         `ALTER TABLE releases ADD COLUMN IF NOT EXISTS artwork_path TEXT`,
-        `ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS path TEXT`
+        `ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS path TEXT`,
+        `ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS duration INTEGER`
       ]
     : [];
 
@@ -176,6 +178,9 @@ async function ensurePathColumns(dbContext) {
     if (!existingColumns.mediaAssets.includes("path")) {
       await runStatement(dbContext, `ALTER TABLE media_assets ADD COLUMN path TEXT`);
     }
+    if (!existingColumns.mediaAssets.includes("duration")) {
+      await runStatement(dbContext, `ALTER TABLE media_assets ADD COLUMN duration INTEGER`);
+    }
   }
 
   if (existingColumns.tracks.includes("storage_key")) {
@@ -185,6 +190,10 @@ async function ensurePathColumns(dbContext) {
        SET audio_path = COALESCE(NULLIF(audio_path, ''), storage_key)
        WHERE audio_path IS NULL OR audio_path = ''`
     );
+
+    if (dialect === "sqlite") {
+      await rebuildLegacySqliteTracksTable(dbContext);
+    }
   }
 
   if (existingColumns.releases.includes("artwork_url")) {
@@ -247,6 +256,60 @@ async function runStatement({ dialect, raw }, statement) {
   }
 
   raw.exec(statement);
+}
+
+async function rebuildLegacySqliteTracksTable(dbContext) {
+  await runStatement(
+    dbContext,
+    `PRAGMA foreign_keys = OFF;
+     BEGIN TRANSACTION;
+     CREATE TABLE tracks_new (
+       id TEXT PRIMARY KEY,
+       title TEXT NOT NULL,
+       artist TEXT NOT NULL,
+       mood TEXT NOT NULL,
+       duration INTEGER NOT NULL,
+       visibility TEXT NOT NULL,
+       audio_path TEXT NOT NULL,
+       artwork_path TEXT,
+       release_label TEXT NOT NULL,
+       lyrics TEXT,
+       created_at TEXT NOT NULL,
+       updated_at TEXT NOT NULL
+     );
+     INSERT INTO tracks_new (
+       id,
+       title,
+       artist,
+       mood,
+       duration,
+       visibility,
+       audio_path,
+       artwork_path,
+       release_label,
+       lyrics,
+       created_at,
+       updated_at
+     )
+     SELECT
+       id,
+       title,
+       artist,
+       mood,
+       COALESCE(duration, 0),
+       visibility,
+       COALESCE(NULLIF(audio_path, ''), storage_key, ''),
+       artwork_path,
+       release_label,
+       lyrics,
+       created_at,
+       updated_at
+     FROM tracks;
+     DROP TABLE tracks;
+     ALTER TABLE tracks_new RENAME TO tracks;
+     COMMIT;
+     PRAGMA foreign_keys = ON;`
+  );
 }
 
 async function seedTracksIfEmpty({ db, schema }) {

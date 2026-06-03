@@ -63,6 +63,7 @@ export const mediaAssets = sqliteTable("media_assets", {
   url: text("url").notNull(),
   storagePath: text("storage_path").notNull(),
   size: integer("size").notNull(),
+  duration: integer("duration"),
   uploadedByUserId: text("uploaded_by_user_id").references(() => users.id),
   createdAt: text("created_at").notNull()
 });

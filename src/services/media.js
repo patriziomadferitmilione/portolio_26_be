@@ -4,6 +4,8 @@ import path from "node:path";
 
 import { desc } from "drizzle-orm";
 
+import { readUploadedAudioDuration } from "./audio-duration.js";
+
 function sanitizeFilename(filename) {
   const baseName = path.basename(filename).trim();
   const safeName = baseName
@@ -41,6 +43,9 @@ export async function saveUploadedAsset(dbContext, config, { fileBuffer, origina
   const relativePath = path.posix.join("media", safeCategory, filename);
   const publicUrl = `${config.PUBLIC_UPLOAD_BASE}/${relativePath}`;
   const now = new Date().toISOString();
+  const duration = safeCategory === "audio" || mimeType.startsWith("audio/")
+    ? await readUploadedAudioDuration(config, publicUrl)
+    : null;
 
   const asset = {
     id: crypto.randomUUID(),
@@ -52,6 +57,7 @@ export async function saveUploadedAsset(dbContext, config, { fileBuffer, origina
     url: publicUrl,
     storagePath: fullPath,
     size: fileBuffer.length,
+    duration,
     uploadedByUserId,
     createdAt: now
   };
